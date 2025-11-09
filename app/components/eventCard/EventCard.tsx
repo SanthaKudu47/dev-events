@@ -25,16 +25,16 @@ export default function EventCard({
         width={420}
         height={100}
         loading="lazy"
-        className="rounded-xl"
+        className="rounded-xl aspect-3/2"
       />
       <div>
         <div className="flex flex-row gap-2 items-center mt-3">
           <Image src={"/icons/pin.png"} alt="location" width={14} height={14} />
-          <h3 className="font-martion-mono text-gray-300  text-sm">
+          <h3 className="font-martion-mono text-gray-300  text-xs">
             {location}
           </h3>
         </div>
-        <h4 className="text-white  text-2xl font-semibold my-2">{title}</h4>
+        <h4 className="text-white text-xl  sm:text-2xl font-semibold my-2">{title}</h4>
         <div className="flex flex-row items-center text-gray-300 gap-2  text-sm mb-2">
           <Image
             alt="calender_icon"
