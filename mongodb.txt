@@ -1,0 +1,4 @@
+jpOht0vlnU9nXtvX
+dev_events_db_user
+
+mongodb+srv://dev_events_db_user:jpOht0vlnU9nXtvX@cluster0.a6dgnsg.mongodb.net/?appName=Cluster0

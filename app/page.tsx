@@ -15,7 +15,9 @@ export default function Home() {
         <section>
           <div className="bg-black">
             <Container>
-              <p className="text-white font-bold text-2xl py-3 px-2">Featured Events</p>
+              <p className="text-white font-bold text-2xl py-3 px-2">
+                Featured Events
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-1">
                 {mockDevEvents.map((eventData, index) => {
                   return (
