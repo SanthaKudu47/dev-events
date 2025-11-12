@@ -17,12 +17,14 @@ export function sendResponse({
   message,
   data,
   status,
+  errors,
 }: ResponseOptions) {
   return NextResponse.json(
     {
       success,
       message,
       data,
+      errors,
     },
     { status }
   );

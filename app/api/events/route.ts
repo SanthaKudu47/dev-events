@@ -1,18 +1,10 @@
 import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import * as z from "zod";
 
 import cloudinary from "cloudinary";
 import dbConnect from "@/database/mongodb";
 import { EventModel } from "@/database/event.mdel";
 import { sendResponse } from "@/lib/response";
-
-type responseJsonType = {
-  success: boolean;
-  message: string;
-  errors: string[] | null;
-  data: string | null;
-  status: number;
-};
 
 //create a EVENT
 
@@ -36,17 +28,90 @@ export async function POST(request: NextRequest) {
     image: formData.get("image"),
   };
 
-  const imageFile = eventData.image as File;
+  //data validation
 
-  if (!imageFile) {
+  //zod schema
+
+  //
+  let zodErrorMessages = [];
+  const EventSchemaZod = z.object({
+    title: z
+      .string("Title is required")
+      .min(5, "Title must be at least 5 characters")
+      .trim(),
+    description: z
+      .string("Description is required")
+      .min(5, "Title must be at least 5 characters"),
+    slug: z.string("Slug is required").trim(),
+    date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      error: "Invalid date format",
+    }),
+    time: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      error: "Invalid time format",
+    }),
+    duration: z.number().positive(),
+    location: z.string("Location is required").trim(),
+    venue: z.string().trim(),
+    mode: z.enum(
+      ["In-Person", "Online", "Hybrid"],
+      "Mode must be one of: In-Person, Online, or Hybrid"
+    ),
+    organizer: z.string("Organizer name is required").trim(),
+    audience: z.array(
+      z.string().nonempty("Audience must have at least one entry")
+    ),
+    agenda: z.array(
+      z.string("Agenda is required").nonempty( "Must contain 1 or fewer items")
+    ),
+    tags: z.array(
+      z
+        .string("Tags are required")
+        .nonempty("Tags must have at least one entry")
+    ),
+    image: z
+      .file("Image file is required")
+      .max(2097152, "Image must be under 2MB"),
+  });
+
+  const parsedResult = EventSchemaZod.safeParse(eventData);
+  console.log("454654564", parsedResult);
+
+  if (!parsedResult.success) {
+    const error = parsedResult.error;
+    const flattened = z.flattenError(error);
+
+    console.log("55555", flattened);
+
+    if (error instanceof z.ZodError) {
+      error.issues.map((err) => {
+        const path = err.path.join(".");
+        zodErrorMessages.push(path ? `${path}: ${err.message}` : err.message);
+      });
+    } else {
+      zodErrorMessages.push("Unexpected error occurred");
+    }
+
     return sendResponse({
       success: false,
-      message: "Required image file is missing",
+      message: "Validation failed",
       data: null,
+      errors: zodErrorMessages,
       status: 400,
     });
   }
 
+  // if (!imageFile) {
+  //   return sendResponse({
+  //     success: false,
+  //     message: "Required image file is missing",
+  //     data: null,
+  //     status: 400,
+  //   });
+  // }
+
+  //uploading image
+
+  const imageFile = eventData.image as File;
   const imageArrayBuffer = await imageFile.arrayBuffer();
   const dataBuffer = Buffer.from(imageArrayBuffer);
   let uploadResult: cloudinary.UploadApiResponse | undefined = undefined;
@@ -98,9 +163,18 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  //parse date and time
+
+  const parsedDate = new Date(eventData.date as string);
+  const parsedTime = new Date(eventData.time as string);
+
+  console.log(parsedDate, parsedTime);
+
   try {
     const newEventDoc = new EventModel({
       ...eventData,
+      date: parsedDate,
+      time: parsedTime,
       image: uploadResult.secure_url,
     });
 
@@ -110,7 +184,7 @@ export async function POST(request: NextRequest) {
       message: "Event created successfully",
       errors: null,
       data: saved._id.toString(),
-      status: 201,
+      status: 200,
     });
   } catch (error) {
     console.error("MongoDB save error:", error);

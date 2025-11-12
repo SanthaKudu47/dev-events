@@ -34,6 +34,8 @@ const eventSchema = new Schema(
 
 //const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const EventModel = models.EventModel || mongoose.model("Event", eventSchema);
+//need to check on here....
+console.log("Calling Model", models);
+const EventModel = models.Event || mongoose.model("Event", eventSchema);
 
 export { EventModel };
