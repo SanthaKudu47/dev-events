@@ -5,11 +5,28 @@ import cloudinary from "cloudinary";
 import dbConnect from "@/database/mongodb";
 import { EventModel } from "@/database/event.mdel";
 import { sendResponse } from "@/lib/response";
+import { abort } from "process";
 
 //create a EVENT
 
 export async function POST(request: NextRequest) {
+  const contentType = request.headers.get("content-type") || "";
+
+  if (!contentType.includes("multipart/form-data")) {
+    return sendResponse({
+      success: false,
+      message: "Validation Failed",
+      data: null,
+      errors: {
+        contentType: "Invalid Content-Type. Expected multipart/form-data.",
+      },
+      status: 400, // Unsupported Media Type
+    });
+  }
+
   const formData = await request.formData();
+
+  console.log(formData);
 
   const eventData = {
     title: formData.get("title"),
@@ -17,78 +34,82 @@ export async function POST(request: NextRequest) {
     slug: formData.get("slug"),
     date: formData.get("date"),
     time: formData.get("time"),
-    duration: Number(formData.get("duration")),
+    duration:
+      formData.get("duration") != null
+        ? Number(formData.get("duration"))
+        : null,
     location: formData.get("location"),
     venue: formData.get("venue"),
     mode: formData.get("mode"),
     organizer: formData.get("organizer"),
-    audience: formData.getAll("audience"),
-    agenda: formData.getAll("agenda"),
-    tags: formData.getAll("tags"),
+    audience:
+      formData.getAll("audience").length === 0
+        ? null
+        : formData.getAll("audience"),
+    agenda:
+      formData.getAll("agenda").length === 0 ? null : formData.getAll("agenda"),
+    tags: formData.getAll("tags").length === 0 ? null : formData.getAll("tags"),
     image: formData.get("image"),
   };
 
-  //data validation
+  //time data field missing issue....need to be handle
 
-  //zod schema
-
-  //
-  let zodErrorMessages = [];
+  let zodErrorMessages = null;
   const EventSchemaZod = z.object({
-    title: z
-      .string("Title is required")
-      .min(5, "Title must be at least 5 characters")
-      .trim(),
+    title: z.string().min(5, "Title must be at least 5 characters").trim(),
     description: z
       .string("Description is required")
       .min(5, "Title must be at least 5 characters"),
     slug: z.string("Slug is required").trim(),
-    date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      error: "Invalid date format",
-    }),
-    time: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      error: "Invalid time format",
-    }),
-    duration: z.number().positive(),
-    location: z.string("Location is required").trim(),
+    date: z
+      .string("Date is required")
+      .refine((val) => !isNaN(Date.parse(val)), {
+        error: "Invalid date format",
+      }),
+    time: z
+      .string("Time is required") //filed missing issue//type change
+      .refine((val) => !isNaN(Date.parse(val)), {
+        error: "Invalid time format",
+      }),
+    duration: z.number("Duration is required.").positive(),
+    location: z.string("Location is required.").trim(),
     venue: z.string().trim(),
     mode: z.enum(
       ["In-Person", "Online", "Hybrid"],
       "Mode must be one of: In-Person, Online, or Hybrid"
     ),
     organizer: z.string("Organizer name is required").trim(),
-    audience: z.array(
-      z.string().nonempty("Audience must have at least one entry")
-    ),
-    agenda: z.array(
-      z.string("Agenda is required").nonempty( "Must contain 1 or fewer items")
-    ),
-    tags: z.array(
-      z
-        .string("Tags are required")
-        .nonempty("Tags must have at least one entry")
-    ),
+    audience: z
+      .array(z.string(), "Audience is required.")
+      .nonempty("Audience must have at least one entry"),
+    agenda: z
+      .array(z.string(), "Agenda is required.")
+      .nonempty("Agenda must have at least one entry"),
+    tags: z
+      .array(z.string(), "Tags are required.")
+      .nonempty("Tags must have at least one entry"),
     image: z
       .file("Image file is required")
-      .max(2097152, "Image must be under 2MB"),
+      .max(2097152, "Image must be under 2MB")
+      .mime(["image/png", "image/jpeg"]),
   });
 
+  console.log(eventData);
+
   const parsedResult = EventSchemaZod.safeParse(eventData);
-  console.log("454654564", parsedResult);
 
   if (!parsedResult.success) {
     const error = parsedResult.error;
-    const flattened = z.flattenError(error);
-
-    console.log("55555", flattened);
 
     if (error instanceof z.ZodError) {
-      error.issues.map((err) => {
-        const path = err.path.join(".");
-        zodErrorMessages.push(path ? `${path}: ${err.message}` : err.message);
-      });
+      // error.issues.map((err) => {
+      //   const path = err.path.join(".");
+      //   zodErrorMessages.push(path ? `${path}: ${err.message}` : err.message);
+      // });
+      const flattened = z.flattenError(error);
+      zodErrorMessages = flattened.fieldErrors;
     } else {
-      zodErrorMessages.push("Unexpected error occurred");
+      zodErrorMessages = { error: "Unexpected error occurred" };
     }
 
     return sendResponse({

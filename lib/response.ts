@@ -5,7 +5,7 @@ type ResponseOptions = {
   message: string;
   data: any;
   status: number;
-  errors?: string[] | null;
+  errors?: string[] | null | object;
 };
 
 /**
