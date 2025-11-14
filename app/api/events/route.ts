@@ -3,9 +3,8 @@ import * as z from "zod";
 
 import cloudinary from "cloudinary";
 import dbConnect from "@/database/mongodb";
-import { EventModel } from "@/database/event.mdel";
+import { EventModel } from "@/database/event.model";
 import { sendResponse } from "@/lib/response";
-import { abort } from "process";
 
 //create a EVENT
 
