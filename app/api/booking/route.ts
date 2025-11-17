@@ -1,6 +1,6 @@
 import { sendResponse } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
-import z, { preprocess } from "zod";
+import z from "zod";
 
 interface IBooking {
   name: string;
@@ -13,6 +13,7 @@ interface IBooking {
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || null;
+  let zodErrorMessages = null;
 
   if (!contentType || !contentType.includes("multipart/form-data")) {
     return sendResponse({
@@ -28,18 +29,57 @@ export async function POST(request: NextRequest) {
   //defining zod schema
 
   const BookingZodSchema = z.object({
-    name: z.string().min(3, "Name must be at least 3 characters").trim(),
-    email: z.email().trim(),
-    event: z.string("Event ID is required"),
-    bookedAt: z.date("Date is required"),
-    status: z.enum(["pending", "confirmed", "cancelled"]),
-    seats: z.preprocess(
-      (val) => Number(val),
-      z.number().min(1, "Seats must be at least 1")
-    ),
+    name: z
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? "Name is required"
+            : "Name must be a string",
+      })
+      .min(3, "Name must be at least 3 characters")
+      .trim(),
+
+    email: z.email({
+      error: (issue) =>
+        issue.input === undefined
+          ? "Email is required"
+          : "Invalid email address",
+    }),
+    event: z.string({
+      error: (issue) =>
+        issue.input === undefined
+          ? "Event ID is required"
+          : "Event must be a string",
+    }),
+
+    bookedAt: z
+      .date({
+        error: (issue) =>
+          issue.input === undefined
+            ? "Booking date is required"
+            : "Invalid date format",
+      })
+      .refine((date) => !isNaN(date.getTime()), {
+        message: "Invalid booking date",
+      }),
+    status: z.enum(["pending", "confirmed", "cancelled"], {
+      error: (issue) =>
+        issue.input === undefined
+          ? "Status is required"
+          : "Invalid status value",
+    }),
+
+    seats: z
+      .number({
+        error: (issue) =>
+          issue.input === undefined
+            ? "Seats are required"
+            : "Seats must be a number",
+      })
+      .min(1, "Seats must be at least 1"),
   });
 
-  const bookingData = {
+  const bookingData: IBooking = {
     name: formData.get("name") as string,
     email: formData.get("email") as string,
     event: formData.get("event") as string,
@@ -48,21 +88,58 @@ export async function POST(request: NextRequest) {
     seats: Number(formData.get("seats")),
   };
 
-  type BookingDatKeys = keyof typeof bookingData;
-  for (const key in bookingData) {
-    if (bookingData[key as BookingDatKeys] === null) {
-      delete bookingData[key as BookingDatKeys];
+  // type BookingDatKeys = keyof typeof bookingData;
+  // for (const key in bookingData) {
+  //   if (bookingData[key as BookingDatKeys] === null) {
+  //     delete bookingData[key as BookingDatKeys];
+  //   }
+  // }
+
+  //custom field checker
+  // const fieldNames = ["name", "email", "event", "bookedAt", "status", "seats"];
+  // const missingFields: string[] = [];
+
+  // fieldNames.forEach((field) => {
+  //   let isFieldAvailable = false;
+  //   formData.forEach((value, key) => {
+  //     if (field === key) {
+  //       isFieldAvailable = true;
+  //     }
+  //   });
+  //   if (!isFieldAvailable) {
+  //     missingFields.push(field);
+  //   }
+  // });
+
+  // if (missingFields.length != 0) {
+  //   return sendResponse({
+  //     success: false,
+  //     data: null,
+  //     message: "Missing required fields",
+  //     status: 400,
+  //   });
+  // }
+
+  const parsedResult = BookingZodSchema.safeParse(bookingData);
+
+  if (!parsedResult.success) {
+    const error = parsedResult.error;
+
+    if (error instanceof z.ZodError) {
+      const flattened = z.flattenError(error);
+      zodErrorMessages = flattened.fieldErrors;
+    } else {
+      zodErrorMessages = { error: "Unexpected error occurred" };
     }
+
+    return sendResponse({
+      success: false,
+      message: "Validation failed",
+      data: null,
+      errors: zodErrorMessages,
+      status: 400,
+    });
   }
-
-  console.log("555555555555", bookingData);
-
-  const result = BookingZodSchema.safeParse({});
-
-  // //extract to obj
-
-  // const bookingData = {};
-  console.log("result", result);
 
   return NextResponse.json(
     {
