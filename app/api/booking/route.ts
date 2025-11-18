@@ -1,3 +1,5 @@
+import { Booking } from "@/database/booking.model";
+import dbConnect from "@/database/mongodb";
 import { sendResponse } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
@@ -140,6 +142,23 @@ export async function POST(request: NextRequest) {
       status: 400,
     });
   }
+
+  try {
+    await dbConnect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to connect to database",
+      errors: null,
+      data: null,
+      status: 500,
+    });
+  }
+
+  //Booking model
+
+  const BookingModel = Booking;
 
   return NextResponse.json(
     {
