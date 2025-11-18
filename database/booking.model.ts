@@ -1,17 +1,6 @@
-import { timeStamp } from "console";
 import mongoose, { models } from "mongoose";
-import { minLength, object, string } from "zod";
-import { required } from "zod/mini";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type props = {
-  value: any;
-  path: string;
-  type: string;
-  message: string;
-  kind?: string;
-};
 
 const bookingSchema = new mongoose.Schema(
   {

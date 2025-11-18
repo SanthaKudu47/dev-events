@@ -4,15 +4,6 @@ import { sendResponse } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
-interface IBooking {
-  name: string;
-  email: string;
-  event: string;
-  bookedAt: Date;
-  status: "pending" | "confirmed" | "cancelled";
-  seats: number;
-}
-
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || null;
   let zodErrorMessages = null;
@@ -54,16 +45,19 @@ export async function POST(request: NextRequest) {
           : "Event must be a string",
     }),
 
-    bookedAt: z
-      .date({
-        error: (issue) =>
-          issue.input === undefined
-            ? "Booking date is required"
-            : "Invalid date format",
-      })
-      .refine((date) => !isNaN(date.getTime()), {
-        message: "Invalid booking date",
-      }),
+    bookedAt: z.preprocess(
+      (string) => new Date(string as string),
+      z
+        .date({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Booking date is required"
+              : "Invalid date format",
+        })
+        .refine((date) => !isNaN(date.getTime()), {
+          message: "Invalid booking date",
+        })
+    ),
     status: z.enum(["pending", "confirmed", "cancelled"], {
       error: (issue) =>
         issue.input === undefined
@@ -71,68 +65,28 @@ export async function POST(request: NextRequest) {
           : "Invalid status value",
     }),
 
-    seats: z
-      .number({
-        error: (issue) =>
-          issue.input === undefined
-            ? "Seats are required"
-            : "Seats must be a number",
-      })
-      .min(1, "Seats must be at least 1"),
+    seats: z.preprocess(
+      (value) => Number(value),
+      z
+        .number({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Seats are required"
+              : "Seats must be a number",
+        })
+        .min(1, "Seats must be at least 1")
+    ),
   });
 
-  const bookingData: IBooking = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    event: formData.get("event") as string,
-    bookedAt: new Date(formData.get("bookedAt") as string),
-    status: formData.get("status") as "pending" | "confirmed" | "cancelled",
-    seats: Number(formData.get("seats")),
-  };
-
-  // type BookingDatKeys = keyof typeof bookingData;
-  // for (const key in bookingData) {
-  //   if (bookingData[key as BookingDatKeys] === null) {
-  //     delete bookingData[key as BookingDatKeys];
-  //   }
-  // }
-
-  //custom field checker
-  // const fieldNames = ["name", "email", "event", "bookedAt", "status", "seats"];
-  // const missingFields: string[] = [];
-
-  // fieldNames.forEach((field) => {
-  //   let isFieldAvailable = false;
-  //   formData.forEach((value, key) => {
-  //     if (field === key) {
-  //       isFieldAvailable = true;
-  //     }
-  //   });
-  //   if (!isFieldAvailable) {
-  //     missingFields.push(field);
-  //   }
-  // });
-
-  // if (missingFields.length != 0) {
-  //   return sendResponse({
-  //     success: false,
-  //     data: null,
-  //     message: "Missing required fields",
-  //     status: 400,
-  //   });
-  // }
-
+  const bookingData = Object.fromEntries(formData.entries());
   const parsedResult = BookingZodSchema.safeParse(bookingData);
+
+  console.log("parsed", parsedResult);
 
   if (!parsedResult.success) {
     const error = parsedResult.error;
-
-    if (error instanceof z.ZodError) {
-      const flattened = z.flattenError(error);
-      zodErrorMessages = flattened.fieldErrors;
-    } else {
-      zodErrorMessages = { error: "Unexpected error occurred" };
-    }
+    const flattened = z.flattenError(error);
+    zodErrorMessages = flattened.fieldErrors;
 
     return sendResponse({
       success: false,
@@ -158,14 +112,27 @@ export async function POST(request: NextRequest) {
 
   //Booking model
 
-  const BookingModel = Booking;
-
-  return NextResponse.json(
-    {
-      data: "this is post",
-    },
-    { status: 200 }
-  );
+  try {
+    const newBooking = new Booking({
+      ...parsedResult.data,
+    });
+    const saved = await newBooking.save();
+    return sendResponse({
+      success: true,
+      message: "Booking created successfully",
+      errors: null,
+      data: saved._id.toString(),
+      status: 200,
+    });
+  } catch (error) {
+    console.error("MongoDB save error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to save booking",
+      data: null,
+      status: 400,
+    });
+  }
 }
 
 export async function GET(request: NextRequest) {
