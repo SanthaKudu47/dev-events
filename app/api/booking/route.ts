@@ -1,7 +1,7 @@
 import { Booking } from "@/database/booking.model";
 import dbConnect from "@/database/mongodb";
 import { sendResponse } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import z from "zod";
 
 export async function POST(request: NextRequest) {
@@ -136,5 +136,39 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  return NextResponse.json("Hello", { status: 200 });
+  //connect db
+
+  try {
+    await dbConnect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to connect to database",
+      status: 400,
+    });
+  }
+
+  //get all bookings
+
+  try {
+    const bookingDocs = await Booking.find({})
+      .sort({ createdAt: -1 })
+      .select("-__v")
+      .lean(); //
+    return sendResponse({
+      success: true,
+      data: bookingDocs,
+      status: 200,
+    });
+  } catch (error) {
+    return sendResponse({
+      success: false,
+      message: "Failed to retrieve bookings from the database",
+      errors: null,
+      status: 400,
+    });
+  }
+
+  //
 }

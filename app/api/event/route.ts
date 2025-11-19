@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
 import cloudinary from "cloudinary";
@@ -215,4 +215,14 @@ export async function POST(request: NextRequest) {
       status: 400,
     });
   }
+}
+
+//retrieve all events
+
+export async function GET(request: NextRequest) {
+  return sendResponse({
+    status: 200,
+    success: true,
+    message: "All Events",
+  });
 }

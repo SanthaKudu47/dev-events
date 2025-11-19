@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 type ResponseOptions = {
   success: boolean;
-  message: string;
-  data: any;
+  message?: string;
+  data?: any;
   status: number;
   errors?: string[] | null | object;
 };
