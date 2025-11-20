@@ -1,4 +1,5 @@
 import mongoose, { Schema, model, models } from "mongoose";
+import { required } from "zod/mini";
 
 const eventSchema = new Schema(
   {
@@ -9,11 +10,13 @@ const eventSchema = new Schema(
       lowercase: true,
       trim: true,
       match: /^[a-z0-9-]+$/, // optional: enforce slug format
+      required: true,
+      unique: true,
     },
 
     date: { type: Date, required: true },
     time: { type: Date, required: true },
-    duration: { type: Number, min: 0, default: 0 },
+    duration: { type: Number, min: 0, default: 60 },
     audience: { type: [{ type: String }] },
     location: { type: String },
     venue: { type: String },
