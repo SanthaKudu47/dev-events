@@ -220,9 +220,34 @@ export async function POST(request: NextRequest) {
 //retrieve all events
 
 export async function GET(request: NextRequest) {
-  return sendResponse({
-    status: 200,
-    success: true,
-    message: "All Events",
-  });
+  try {
+    await dbConnect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to connect to database",
+      errors: null,
+      data: null,
+      status: 500,
+    });
+  }
+
+  try {
+    const events = await EventModel.find({})
+      .select("-__v")
+      .sort({ createdAt: -1 })
+      .lean();
+    return sendResponse({
+      status: 200,
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    return sendResponse({
+      status: 400,
+      success: false,
+      message: "Failed to retrieve events from the database",
+    });
+  }
 }
