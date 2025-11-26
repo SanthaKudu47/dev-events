@@ -1,6 +1,6 @@
 import { EventModel } from "@/database/event.model";
 import dbConnect from "@/database/mongodb";
-import { uploadImage } from "@/lib/imageUploader";
+import { removeImage, uploadImage } from "@/lib/imageUploader";
 import { sendResponse } from "@/lib/response";
 import { validateEventData } from "@/lib/valiadation/schemas.event";
 import { headers } from "next/headers";
@@ -222,5 +222,71 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     success: true,
     message: "Event updated successfully",
     data: updatedDoc,
+  });
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { slug } = await params;
+
+  //connect db
+  // check for id
+  try {
+    await dbConnect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to connect to database",
+      errors: null,
+      data: null,
+      status: 500,
+    });
+  }
+  let deletedDoc;
+  try {
+    deletedDoc = await EventModel.findOneAndDelete(
+      {
+        slug: slug,
+      },
+      { projection: "-__v" }
+    );
+  } catch (error) {
+    console.error("MongoDB delete error:", error);
+    return sendResponse({
+      status: 500,
+      success: false,
+      message: "Failed to delete event from database",
+      data: null,
+    });
+  }
+
+  // No matching event
+  if (!deletedDoc) {
+    return sendResponse({
+      status: 404,
+      success: false,
+      message: "Event not found",
+      data: null,
+    });
+  }
+
+  //delete image too
+
+  const imageUrl = deletedDoc.image as string;
+  try {
+    const result = await removeImage(imageUrl);
+    if (!result) {
+      console.log("Image deletion returned no result");
+    }
+  } catch (error) {
+    console.log("Cloudinary image deletion failed:", error);
+    //proper error handling
+  }
+
+  return sendResponse({
+    status: 200,
+    success: true,
+    message: "Event deleted successfully",
+    data: deletedDoc,
   });
 }
