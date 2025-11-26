@@ -1,18 +1,5 @@
 import cloudinary from "cloudinary";
-import { url } from "inspector";
-import { overwrite } from "zod";
-
-function extractCloudinaryPublicId(url: string): string {
-  // Remove everything up to /upload/
-  const parts = url.split("/upload/");
-  const afterUpload = parts[1]; // e.g. "v1763640319/dev_events/ljf3ztrqjhc96hqtsmge.png"
-
-  // Remove version if present (starts with v123456...)
-  const withoutVersion = afterUpload.replace(/^v\d+\//, "");
-
-  // Remove file extension (.jpg, .png, etc.)
-  return withoutVersion.replace(/\.[a-zA-Z]+$/, "");
-}
+import { extractCloudinaryPublicId } from "./utils";
 
 export type cloudinaryUploadResponseType = cloudinary.UploadApiResponse;
 
@@ -55,4 +42,15 @@ export async function uploadImage(
       )
       .end(dataBuffer);
   });
+}
+
+export async function removeImage(imageUrl: string) {
+  return cloudinary.v2.uploader.destroy(
+    extractCloudinaryPublicId(imageUrl),
+    {
+      resource_type: "image",
+    }
+  );
+
+  
 }
