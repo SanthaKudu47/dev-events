@@ -7,3 +7,15 @@ export function appendTimeToDate(date: Date, time: string): Date {
   newDate.setHours(hours, minutes, 0, 0); // set h:m, reset seconds/ms
   return newDate;
 }
+
+export function extractCloudinaryPublicId(url: string): string {
+  // Remove everything up to /upload/
+  const parts = url.split("/upload/");
+  const afterUpload = parts[1]; // e.g. "v1763640319/dev_events/ljf3ztrqjhc96hqtsmge.png"
+
+  // Remove version if present (starts with v123456...)
+  const withoutVersion = afterUpload.replace(/^v\d+\//, "");
+
+  // Remove file extension (.jpg, .png, etc.)
+  return withoutVersion.replace(/\.[a-zA-Z]+$/, "");
+}
