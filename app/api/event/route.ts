@@ -101,11 +101,14 @@ export async function POST(request: NextRequest) {
     });
 
     const saved = await newEventDoc.save();
+    const parsed = saved.toObject();
+    delete parsed.__v;
+
     return sendResponse({
       success: true,
       message: "Event created successfully",
       errors: null,
-      data: saved._id.toString(),
+      data: parsed,
       status: 200,
     });
   } catch (error) {
