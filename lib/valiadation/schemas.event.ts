@@ -1,5 +1,4 @@
 import z from "zod";
-import { partial } from "zod/mini";
 
 const EventSchemaZod = z.object({
   title: z
@@ -52,6 +51,14 @@ const EventSchemaZod = z.object({
         issue.input === undefined
           ? "Duration is required"
           : "Duration must be a number",
+    })
+    .positive(),
+  seats: z
+    .number({
+      error: (issue) =>
+        issue.input === undefined
+          ? "Seats Field is required"
+          : "Seats must be a number",
     })
     .positive(),
   location: z
@@ -142,6 +149,7 @@ function extractFormData(formData: FormData) {
       formData.getAll("agenda").length === 0 ? null : formData.getAll("agenda"),
     tags: formData.getAll("tags").length === 0 ? null : formData.getAll("tags"),
     image: formData.get("image"),
+    seats: formData.get("seats") != null ? Number(formData.get("seats")) : null,
   };
 
   console.log(eventData);

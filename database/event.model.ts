@@ -1,5 +1,4 @@
 import mongoose, { Schema, model, models } from "mongoose";
-import { required } from "zod/mini";
 
 const eventSchema = new Schema(
   {
@@ -29,6 +28,12 @@ const eventSchema = new Schema(
     agenda: { type: [{ type: String }] },
     organizer: { type: String },
     tags: { type: [{ type: String }] },
+    seats: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt

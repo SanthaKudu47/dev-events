@@ -1,6 +1,9 @@
 import { Booking } from "@/database/booking.model";
+import { EventModel } from "@/database/event.model";
 import dbConnect from "@/database/mongodb";
 import { sendResponse } from "@/lib/response";
+import { validateBookingSchema } from "@/lib/valiadation/schema.booking";
+import { isValidObjectId } from "mongoose";
 import { NextRequest } from "next/server";
 import z from "zod";
 
@@ -21,65 +24,7 @@ export async function POST(request: NextRequest) {
 
   //defining zod schema
 
-  const BookingZodSchema = z.object({
-    name: z
-      .string({
-        error: (issue) =>
-          issue.input === undefined
-            ? "Name is required"
-            : "Name must be a string",
-      })
-      .min(3, "Name must be at least 3 characters")
-      .trim(),
-
-    email: z.email({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Email is required"
-          : "Invalid email address",
-    }),
-    event: z.string({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Event ID is required"
-          : "Event must be a string",
-    }),
-
-    bookedAt: z.preprocess(
-      (string) => new Date(string as string),
-      z
-        .date({
-          error: (issue) =>
-            issue.input === undefined
-              ? "Booking date is required"
-              : "Invalid date format",
-        })
-        .refine((date) => !isNaN(date.getTime()), {
-          message: "Invalid booking date",
-        })
-    ),
-    status: z.enum(["pending", "confirmed", "cancelled"], {
-      error: (issue) =>
-        issue.input === undefined
-          ? "Status is required"
-          : "Invalid status value",
-    }),
-
-    seats: z.preprocess(
-      (value) => Number(value),
-      z
-        .number({
-          error: (issue) =>
-            issue.input === undefined
-              ? "Seats are required"
-              : "Seats must be a number",
-        })
-        .min(1, "Seats must be at least 1")
-    ),
-  });
-
-  const bookingData = Object.fromEntries(formData.entries());
-  const parsedResult = BookingZodSchema.safeParse(bookingData);
+  const parsedResult = validateBookingSchema(formData);
 
   console.log("parsed", parsedResult);
 
@@ -110,6 +55,38 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  try {
+    const eventId = parsedResult.data.event;
+
+    if (!isValidObjectId(eventId)) {
+      return sendResponse({
+        success: false,
+        message: "Invalid event ID format",
+        data: null,
+        status: 400,
+      });
+    }
+
+    //check for event id availability
+    const eventDoc = await EventModel.findById(parsedResult.data.event).lean();
+    if (!eventDoc) {
+      return sendResponse({
+        success: false,
+        message: "Event not found",
+        data: null,
+        status: 404,
+      });
+    }
+  } catch (error) {
+    console.error("MongoDB lookup error:", error);
+    return sendResponse({
+      success: false,
+      message: "Database error while loading event",
+      data: null,
+      status: 400,
+    });
+  }
+
   //Booking model
 
   try {
@@ -125,7 +102,17 @@ export async function POST(request: NextRequest) {
       status: 200,
     });
   } catch (error) {
-    console.error("MongoDB save error:", error);
+    console.log("MongoDB save error:", error);
+    const seatError = error as Error & { type: string };
+
+    if (seatError.type === "SEAT_UNAVAILABLE") {
+      return sendResponse({
+        success: false,
+        message: seatError.message,
+        data: null,
+        status: 400,
+      });
+    }
     return sendResponse({
       success: false,
       message: "Unable to save booking",
