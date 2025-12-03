@@ -269,3 +269,88 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+
+  if (!isValidObjectId(id)) {
+    return sendResponse({
+      success: false,
+      message: "Invalid booking ID format",
+      data: null,
+      status: 400,
+    });
+  }
+
+  try {
+    await dbConnect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return sendResponse({
+      success: false,
+      message: "Unable to connect to database",
+      status: 500,
+    });
+  }
+
+  const session = await mongoose.startSession();
+  let isTransactionCommitted = false;
+
+  try {
+    session.startTransaction();
+    const bookingDoc = await Booking.findOneAndDelete(
+      {
+        _id: id,
+      },
+      {
+        session: session,
+      }
+    );
+
+    if (!bookingDoc) {
+      const documentNotFoundError: Error & {
+        type?: string;
+      } = new Error("Booking not found"); //add proper message
+      documentNotFoundError.type = "NotFoundError";
+      throw documentNotFoundError;
+    }
+
+    const freedSeats = bookingDoc.seats;
+    await EventModel.findOneAndUpdate(
+      { _id: bookingDoc.event.toString() },
+      {
+        $inc: {
+          seats: freedSeats,
+        },
+      },
+      {
+        new: true,
+        session: session,
+      }
+    );
+
+    await session.commitTransaction();
+    isTransactionCommitted = true;
+
+    return sendResponse({
+      success: true,
+      message: "Booking deleted successfully",
+      data: bookingDoc,
+      status: 200,
+    });
+  } catch (error) {
+    console.log("Transaction error:", error);
+    const err = error as Error & {
+      type?: string;
+    };
+    if (!isTransactionCommitted) await session.abortTransaction();
+    return sendResponse({
+      success: false,
+      message: err?.message || "Failed to delete booking",
+      data: null,
+      status: err?.type === "NotFoundError" ? 404 : 500,
+    });
+  } finally {
+    session.endSession();
+  }
+}
