@@ -44,6 +44,7 @@ const eventSchema = new Schema(
 
 //need to check on here....
 console.log("Calling Model", models);
+eventSchema.index({ createdAt: -1 });
 const EventModel = models.Event || mongoose.model("Event", eventSchema);
 
 export { EventModel };

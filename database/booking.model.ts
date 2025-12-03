@@ -76,7 +76,7 @@ bookingSchema.pre("save", async function () {
 });
 
 //model
-
+bookingSchema.index({ createdAt: -1 });
 const Booking = models.Booking || mongoose.model("Booking", bookingSchema);
 
 export { Booking };
