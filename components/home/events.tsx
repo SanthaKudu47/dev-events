@@ -14,7 +14,6 @@ export default async function Events() {
     return (
       <>
         {events.map((eventData) => {
-          console.log(eventData.image);
           return (
             <EventCard
               image={eventData.image}
