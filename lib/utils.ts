@@ -19,3 +19,24 @@ export function extractCloudinaryPublicId(url: string): string {
   // Remove file extension (.jpg, .png, etc.)
   return withoutVersion.replace(/\.[a-zA-Z]+$/, "");
 }
+
+export function extractDate(isoString: string): string {
+  // Defensive check
+  if (!isoString) return "";
+
+  // Option 1: Split at "T"
+  return isoString.split("T")[0];
+}
+
+export function extractTime(isoString: string): string {
+  if (!isoString) return "";
+
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
