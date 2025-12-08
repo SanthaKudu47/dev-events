@@ -1,10 +1,11 @@
+import { error } from "console";
 import z from "zod";
 
 const EventSchemaZod = z.object({
   title: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Title is required"
           : "Title must be a string",
     })
@@ -13,7 +14,7 @@ const EventSchemaZod = z.object({
   description: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Description is required"
           : "Description must be a string",
     })
@@ -21,7 +22,7 @@ const EventSchemaZod = z.object({
   slug: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Slug is required"
           : "Slug must be a string",
     })
@@ -29,7 +30,7 @@ const EventSchemaZod = z.object({
   date: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Date is required"
           : "Date must be a string",
     })
@@ -39,7 +40,7 @@ const EventSchemaZod = z.object({
   time: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Time is required"
           : "Time must be a string",
     })
@@ -48,7 +49,7 @@ const EventSchemaZod = z.object({
   duration: z
     .number({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Duration is required"
           : "Duration must be a number",
     })
@@ -56,7 +57,7 @@ const EventSchemaZod = z.object({
   seats: z
     .number({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Seats Field is required"
           : "Seats must be a number",
     })
@@ -64,7 +65,7 @@ const EventSchemaZod = z.object({
   location: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Location is required"
           : "Location must be a string",
     })
@@ -72,19 +73,21 @@ const EventSchemaZod = z.object({
   venue: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Venue is required"
           : "Venue must be a string",
     })
     .trim(),
-  mode: z.enum(
-    ["In-Person", "Online", "Hybrid"],
-    "Mode must be one of: In-Person, Online, or Hybrid"
-  ),
+  mode: z.enum(["In-Person", "Online", "Hybrid"], {
+    error: (issue) =>
+      issue.input === undefined || issue.input === null
+        ? "Mode is required"
+        : "Mode must be one of: In-Person, Online, or Hybrid",
+  }),
   organizer: z
     .string({
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Organizer is required"
           : "Organizer must be a string",
     })
@@ -92,7 +95,7 @@ const EventSchemaZod = z.object({
   audience: z
     .array(z.string(), {
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Audience is required"
           : "Audience must be an array of strings",
     })
@@ -100,7 +103,7 @@ const EventSchemaZod = z.object({
   agenda: z
     .array(z.string(), {
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Agenda is required"
           : "Agenda must be an array of strings",
     })
@@ -108,7 +111,7 @@ const EventSchemaZod = z.object({
   tags: z
     .array(z.string(), {
       error: (issue) =>
-        issue.input === undefined
+        issue.input === undefined || issue.input === null
           ? "Tags are required"
           : "Tags must be an array of strings",
     })
@@ -164,5 +167,6 @@ export function validateEventDataOptional(formData: FormData) {
 
 export function validateEventData(formData: FormData) {
   const eventData = extractFormData(formData);
+  //null handle
   return EventSchemaZod.safeParse(eventData);
 }

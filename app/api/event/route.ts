@@ -125,7 +125,14 @@ export async function POST(request: NextRequest) {
 
 //retrieve all events
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const from = searchParams.get("from");
+  const limit = parseInt(searchParams.get("limit") || "10"); //default 10
+
+  const query = from ? { _id: { $lt: from } } : {};
+  const sortOrder = -1;
+
   try {
     await dbConnect();
   } catch (error) {
@@ -140,14 +147,17 @@ export async function GET() {
   }
 
   try {
-    const events = await EventModel.find({})
+    const events = await EventModel.find(query)
       .select("-__v")
-      .sort({ createdAt: -1 })
+      .sort({ _id: sortOrder })
+      .limit(limit)
       .lean();
+
+    const nextCursor = events.length ? events[events.length - 1]._id : null;
     return sendResponse({
       status: 200,
       success: true,
-      data: events,
+      data: { events: events, next_cursor: nextCursor },
     });
   } catch (error) {
     return sendResponse({
