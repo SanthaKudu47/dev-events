@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-type ResponseOptions = {
+export type ResponseOptions = {
   success: boolean;
   message?: string;
   data?: any;

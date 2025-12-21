@@ -8,6 +8,13 @@
     --color-button-bg: #0D161A;
     --color-app-button-border: #182830;
     --color-header-gradient-top: #270635;
+    --color-form-bg: #0D161A;
+    --color-form-border: #182830;
+    --color-form-btn: #59DECA;
+    --color-input-bg: #243B47;
+    --color-input-btn-text: #030708;
+    --color-tag-bg: #0D161A;
+    --color-text: #E7F2FF;
 
 
 }
@@ -17,7 +24,7 @@
 
 
 .title {
-    @apply inline-block bg-linear-to-t from-header-gradient-bottom to-white text-transparent bg-clip-text text-center font-semibold
+    @apply inline-block bg-linear-to-t from-header-gradient-bottom to-white text-transparent bg-clip-text font-semibold
 }
 
 .font-schibsted-grotesk {
