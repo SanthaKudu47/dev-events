@@ -6,7 +6,11 @@ export default function ToastContainer() {
   const { toastStore } = useRegisterToStore();
 
   return (
-    <div className="flex w-full  inset-0 h-14 top-0 fixed pointer-events-none">
+    <div
+      className={`flex w-full  inset-0 h-14 top-0 fixed pointer-events-none ${
+        toastStore.isVisible ? "z-50" : ""
+      }`}
+    >
       <div className="pointer-events-auto flex w-full">
         {toastStore.isVisible && (
           <ToastItem message={toastStore.message} type={toastStore.type} />

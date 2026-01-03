@@ -50,7 +50,7 @@ export default function EventBookingForm({
 
   const submitForm = async function (e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
+displayMessageToast("Your booking was successfully created!");
     const { email, seats, errors, name } = localFormData;
     let updatedErrors = {
       ...errors,
