@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Schibsted_Grotesk, Martian_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/navigation/navigation";
+import ToastContainer from "@/components/toastContainer/toastContainer";
 
 const schibstedGrotesk = Schibsted_Grotesk({
   variable: "--font-schibsted-grotesk",
@@ -29,7 +30,7 @@ export default function RootLayout({
         className={`${schibstedGrotesk.variable} ${martianMono.variable} antialiased min-h-screen bg-white`}
       >
         <Navigation />
-
+        <ToastContainer />
         {children}
       </body>
     </html>

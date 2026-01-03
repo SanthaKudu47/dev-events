@@ -1,25 +1,37 @@
 "use server";
 
-import { createNewBooking, loadEventBySlug } from "../dataFetch/dataFetching";
+import {
+  createNewBooking,
+  createNewEvent,
+  loadEventBySlug,
+} from "../dataFetch/dataFetching";
+import { EventReturnType } from "../types";
 
+export async function createBooking(formData: FormData, id: string) {
+  const email = formData.get("email") as string | null;
+  const seats = formData.get("seats") as string | null;
+  const name = formData.get("name") as string | null;
 
-export async function createBooking(formData: FormData,id:string) {
-  const email = formData.get("email")
-    ? (formData.get("email") as string)
-    : undefined;
-  const seats = formData.get("seats")
-    ? (formData.get("seats") as string)
-    : undefined;
-  const name = formData.get("name")
-    ? (formData.get("name") as string)
-    : undefined;
-
-  if (name && seats && email) {
-    console.log("XXXXXX",id);
-    const response = await createNewBooking(name, email, seats,id);
-  } else {
-    return {};
+  // Validate required fields
+  if (!name || !email || !seats) {
+    return {
+      success: false,
+      error: "Missing required booking fields",
+    };
   }
+
+  const response = await createNewBooking(name, email, seats, id);
+  if (response.success) {
+    return {
+      success: true,
+      data: response.data, // booking id
+    };
+  }
+
+  return {
+    success: false,
+    error: response.error ?? "Unknown error occurred",
+  };
 }
 
 export async function getAvailableSeatsBySlug(slug: string) {
@@ -33,3 +45,25 @@ export async function getAvailableSeatsBySlug(slug: string) {
     return { success: true, seats: response.event.seats };
   }
 }
+
+export async function createEventAction(formData: FormData): Promise<{
+  success: boolean;
+  data: EventReturnType | null;
+  error: string | null;
+}> {
+  const response = await createNewEvent(formData);
+  if (response.success) {
+    return {
+      success: true,
+      data: response.data, // event id
+      error: null,
+    };
+  }
+
+  return {
+    success: false,
+    error: response.error ?? "Unknown error occurred",
+    data: null,
+  };
+}
+//first adventure asrixs and oblix

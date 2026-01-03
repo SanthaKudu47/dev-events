@@ -4,11 +4,12 @@ import {
   ChangeEvent,
   FormEvent,
   useActionState,
+  useContext,
   useEffect,
   useState,
   useTransition,
 } from "react";
-import FormInput from "./formInput/formInput";
+import FormInput from "../../formInput/formInput";
 import {
   createBooking,
   getAvailableSeatsBySlug,
@@ -17,6 +18,9 @@ import { error } from "console";
 import { bookingFormDataType } from "@/lib/types";
 import z, { email, number } from "zod";
 import { validateBookingForm } from "@/lib/valiadation/schema.bookingForm";
+import { ToastContext } from "@/app/context/toast.context";
+import { updateStore } from "@/store/store";
+import { displayErrorToast, displayMessageToast } from "@/lib/utils";
 
 export default function EventBookingForm({
   seatsFromShell,
@@ -46,7 +50,7 @@ export default function EventBookingForm({
 
   const submitForm = async function (e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-console.log(id);
+
     const { email, seats, errors, name } = localFormData;
     let updatedErrors = {
       ...errors,
@@ -97,9 +101,29 @@ console.log(id);
       dataToBeSent.append("email", email);
       dataToBeSent.append("seats", seats);
       dataToBeSent.append("name", name);
-      console.log("8888888",id);
-      const response = await createBooking(dataToBeSent,id);
+
+      const response = await createBooking(dataToBeSent, id);
+      if (response.success) {
+        displayMessageToast("Your booking was successfully created!");
+      } else {
+        displayErrorToast("Unable to complete your booking. Please try again.");
+      }
     }
+
+    setLocalFormData((prev) => {
+      return {};
+    });
+
+    setSeats((prev) => {
+      return prev - (localFormData.seats ? Number(localFormData.seats) : 0);
+    });
+
+    startTransition(async () => {
+      const response = await getAvailableSeatsBySlug(slug);
+      if (response.success) {
+        setSeats(Number(response.seats));
+      }
+    });
   };
 
   const createFieldHandler = function (key: "email" | "seats" | "name") {
@@ -138,7 +162,7 @@ console.log(id);
       });
     };
   };
-console.log("fff",id);
+
   return (
     <div className="bg-form-bg  rounded-2xl border-solid border-form-border border-2 p-3 min-w-[300px]">
       <form

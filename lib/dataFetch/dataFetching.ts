@@ -1,8 +1,7 @@
 //fetch events data
 
-import { error } from "console";
-import { success } from "zod";
 import { ResponseOptions } from "../response";
+import { EventReturnType, responseType } from "../types";
 
 type EventDataType = {
   _id: string;
@@ -29,13 +28,6 @@ type LoadEventsResult =
 type LoadEventBySlugResult =
   | { success: true; event: EventDataType }
   | { success: false; error: string };
-
-type BookingEventsResult =
-  | {
-      success: boolean;
-      error: string;
-    }
-  | {};
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI;
 
@@ -109,7 +101,11 @@ export async function createNewBooking(
   email: string,
   seats: string,
   id: string
-): Promise<BookingEventsResult> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  data?: string;
+}> {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("email", email);
@@ -117,25 +113,70 @@ export async function createNewBooking(
   formData.append("event", id);
   formData.append("bookedAt", new Date().toISOString());
   formData.append("status", "pending");
+
   try {
-    console.log("At POST ..........");
     const response = await fetch(`${BASE_URL}api/booking`, {
       method: "POST",
       body: formData,
     });
-    if (response.ok) {
-      const responseParsed = await response.json();
-      console.log(responseParsed);
-      return { success: false, error: "API returned unsuccessful flag" };
-    } else {
+
+    if (!response.ok) {
       return { success: false, error: "API returned unsuccessful flag" };
     }
+
+    let responseParsed: responseType;
+    try {
+      responseParsed = await response.json();
+    } catch (error) {
+      return { success: false, error: "Failed to parse server response" };
+    }
+
+    return { success: true, data: responseParsed.data }; //booking id
   } catch (error) {
-    //network related issues
-    console.log("errrr", error);
     return {
-      error: "",
       success: false,
+      error: "Unable to connect API",
+    };
+  }
+}
+
+export async function createNewEvent(formData: FormData): Promise<{
+  success: boolean;
+  error: string|null;
+  data: EventReturnType | null;
+}> {
+  try {
+    const response = await fetch(`${BASE_URL}api/event`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: "API returned unsuccessful flag",
+        data: null,
+      };
+    }
+    let responseParsed: responseType;
+    try {
+      responseParsed = await response.json();
+    } catch (error) {
+      return {
+        success: false,
+        error: "Failed to parse server response",
+        data: null,
+      };
+    }
+
+    return { success: true, data: responseParsed.data, error: null };
+  } catch (error) {
+    // Network failure, DNS issue, CORS, server down, etc.
+
+    return {
+      error: "Unable to connect API",
+      success: false,
+      data: null,
     };
   }
 }

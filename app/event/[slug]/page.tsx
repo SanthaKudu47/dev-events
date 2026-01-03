@@ -1,6 +1,6 @@
 import Container from "@/components/container/container";
 import EventPageBase from "@/components/eventPage/eventBasePage";
-import { loadEventBySlug, loadEvents } from "@/lib/dataFetch/dataFetching";
+import { loadEvents } from "@/lib/dataFetch/dataFetching";
 import { Suspense } from "react";
 
 export async function generateStaticParams() {

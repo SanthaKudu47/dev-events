@@ -1,3 +1,6 @@
+import { updateStore } from "@/store/store";
+import { CreateFormType } from "./types";
+
 export function appendTimeToDate(date: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
 
@@ -107,4 +110,63 @@ export function formatTimeRange(start: string, durationInMinutes: number) {
   };
 
   return `${formatTime(startDate)} – ${formatTime(endDate)}`;
+}
+
+export function bytesToMB(bytes: number, decimals = 2): string {
+  if (bytes === 0) return "0 MB";
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(decimals)} MB`;
+}
+
+export function createEventFormData(data: CreateFormType) {
+  const formData = new FormData();
+
+  // Simple scalar fields
+  formData.append("title", data.title);
+  formData.append("slug", data.slug);
+  formData.append("date", data.date);
+  formData.append("time", data.time);
+  formData.append("duration", String(data.duration));
+  formData.append("location", data.location);
+  formData.append("venue", data.venue);
+  formData.append("mode", data.mode);
+  formData.append("seats", String(data.seats));
+  formData.append("organizer", data.organizer);
+  formData.append("description", data.description);
+
+  // Arrays → append each item individually
+  data.audience.forEach((item) => {
+    formData.append("audience", item);
+  });
+
+  data.agenda.forEach((item) => {
+    formData.append("agenda", item);
+  });
+
+  data.tags.forEach((tag) => {
+    formData.append("tags", tag);
+  });
+
+  // File
+  if (data.image instanceof File) {
+    formData.append("image", data.image);
+  }
+
+  return formData;
+}
+
+export function displayMessageToast(message: string) {
+  updateStore({
+    isVisible: true,
+    type: "message",
+    message: message,
+  });
+}
+
+export function displayErrorToast(message: string) {
+  updateStore({
+    isVisible: true,
+    type: "error",
+    message: message,
+  });
 }

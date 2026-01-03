@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
+
+
 
 @theme {
 
@@ -34,3 +37,49 @@
 .font-martion-mono {
     font-family: var(--font-martion-mono);
 }
+
+.react-datepicker {
+    @apply bg-input-bg border-2 border-solid border-form-border text-text
+}
+
+.react-datepicker__header {
+    @apply bg-form-bg
+}
+
+.react-datepicker__current-month {
+    @apply text-text/80
+}
+
+.react-datepicker__day-name {
+    @apply text-text/60
+}
+
+.react-datepicker__day {
+    @apply text-text font-bold
+}
+
+.react-datepicker__day--keyboard-selected {
+    @apply bg-blue-500
+}
+
+
+
+.react-datepicker__day:not([aria-disabled="true"]):hover {
+    @apply bg-form-bg/60
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(200px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out;
+}
+
