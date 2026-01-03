@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData();
 
+  console.log("Api", formData);
+
   let zodErrorMessages = null;
   const parsedResult = validateEventData(formData);
 
@@ -90,8 +92,6 @@ export async function POST(request: NextRequest) {
   const parsedDate = new Date(eventData.date as string);
   const parsedTime = appendTimeToDate(parsedDate, eventData.time);
 
-  console.log(parsedDate, parsedTime);
-
   try {
     const newEventDoc = new EventModel({
       ...eventData,
@@ -103,6 +103,8 @@ export async function POST(request: NextRequest) {
     const saved = await newEventDoc.save();
     const parsed = saved.toObject();
     delete parsed.__v;
+
+    console.log(parsed);
 
     return sendResponse({
       success: true,

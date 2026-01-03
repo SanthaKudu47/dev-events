@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
+
+
 
 @theme {
 
@@ -8,6 +11,13 @@
     --color-button-bg: #0D161A;
     --color-app-button-border: #182830;
     --color-header-gradient-top: #270635;
+    --color-form-bg: #0D161A;
+    --color-form-border: #182830;
+    --color-form-btn: #59DECA;
+    --color-input-bg: #243B47;
+    --color-input-btn-text: #030708;
+    --color-tag-bg: #0D161A;
+    --color-text: #E7F2FF;
 
 
 }
@@ -17,7 +27,7 @@
 
 
 .title {
-    @apply inline-block bg-linear-to-t from-header-gradient-bottom to-white text-transparent bg-clip-text text-center font-semibold
+    @apply inline-block bg-linear-to-t from-header-gradient-bottom to-white text-transparent bg-clip-text font-semibold
 }
 
 .font-schibsted-grotesk {
@@ -27,3 +37,49 @@
 .font-martion-mono {
     font-family: var(--font-martion-mono);
 }
+
+.react-datepicker {
+    @apply bg-input-bg border-2 border-solid border-form-border text-text
+}
+
+.react-datepicker__header {
+    @apply bg-form-bg
+}
+
+.react-datepicker__current-month {
+    @apply text-text/80
+}
+
+.react-datepicker__day-name {
+    @apply text-text/60
+}
+
+.react-datepicker__day {
+    @apply text-text font-bold
+}
+
+.react-datepicker__day--keyboard-selected {
+    @apply bg-blue-500
+}
+
+
+
+.react-datepicker__day:not([aria-disabled="true"]):hover {
+    @apply bg-form-bg/60
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(200px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out;
+}
+

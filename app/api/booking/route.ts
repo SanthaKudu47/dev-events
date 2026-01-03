@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   const parsedResult = validateBookingSchema(formData);
 
-  console.log("parsed", parsedResult);
+  
 
   if (!parsedResult.success) {
     const error = parsedResult.error;
