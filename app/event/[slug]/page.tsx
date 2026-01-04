@@ -1,5 +1,6 @@
-import Container from "@/components/container/container";
 import EventPageBase from "@/components/eventPage/eventBasePage";
+import RelatedEvents from "@/components/eventPage/related/relatedEvents";
+import EventCardSkeleton from "@/components/eventPage/related/skelton";
 import { loadEvents } from "@/lib/dataFetch/dataFetching";
 import { Suspense } from "react";
 
@@ -24,8 +25,12 @@ export default async function Page({
 }) {
   const { slug } = await params;
   return (
-    <Suspense fallback={<p>This is Fallback</p>}>
-      <EventPageBase slug={slug} />
-    </Suspense>
+    <div>
+      <section>
+        <Suspense fallback={<p>This is Fallback</p>}>
+          <EventPageBase slug={slug} />
+        </Suspense>
+      </section>
+    </div>
   );
 }

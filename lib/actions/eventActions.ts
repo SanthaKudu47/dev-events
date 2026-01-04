@@ -4,6 +4,7 @@ import {
   createNewBooking,
   createNewEvent,
   loadEventBySlug,
+  loadRelatedEventsBySlug,
 } from "../dataFetch/dataFetching";
 import { EventReturnType } from "../types";
 
@@ -67,3 +68,24 @@ export async function createEventAction(formData: FormData): Promise<{
   };
 }
 //first adventure asrixs and oblix
+
+export async function loadRelatedEventsBySlugAction(slug: string): Promise<{
+  success: boolean;
+  data: EventReturnType[] | null;
+  error: string | null;
+}> {
+  const response = await loadRelatedEventsBySlug(slug);
+  if (response.success) {
+    return {
+      success: true,
+      data: response.data, // event id
+      error: null,
+    };
+  }
+
+  return {
+    success: false,
+    error: response.error ?? "Unknown error occurred",
+    data: null,
+  };
+}
