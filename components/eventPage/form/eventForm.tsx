@@ -14,12 +14,11 @@ import {
   createBooking,
   getAvailableSeatsBySlug,
 } from "@/lib/actions/eventActions";
-import { error } from "console";
+
 import { bookingFormDataType } from "@/lib/types";
-import z, { email, number } from "zod";
+import z from "zod";
 import { validateBookingForm } from "@/lib/valiadation/schema.bookingForm";
-import { ToastContext } from "@/app/context/toast.context";
-import { updateStore } from "@/store/store";
+
 import { displayErrorToast, displayMessageToast } from "@/lib/utils";
 
 export default function EventBookingForm({
@@ -50,7 +49,7 @@ export default function EventBookingForm({
 
   const submitForm = async function (e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-displayMessageToast("Your booking was successfully created!");
+    displayMessageToast("Your booking was successfully created!");
     const { email, seats, errors, name } = localFormData;
     let updatedErrors = {
       ...errors,

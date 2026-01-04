@@ -142,7 +142,7 @@ export async function createNewBooking(
 
 export async function createNewEvent(formData: FormData): Promise<{
   success: boolean;
-  error: string|null;
+  error: string | null;
   data: EventReturnType | null;
 }> {
   try {
@@ -173,6 +173,37 @@ export async function createNewEvent(formData: FormData): Promise<{
   } catch (error) {
     // Network failure, DNS issue, CORS, server down, etc.
 
+    return {
+      error: "Unable to connect API",
+      success: false,
+      data: null,
+    };
+  }
+}
+
+export async function loadRelatedEventsBySlug(slug: string) {
+  try {
+    const response = await fetch(`${BASE_URL}api/event/${slug}/related`);
+    if (!response.ok) {
+      return {
+        success: false,
+        error: "API returned unsuccessful flag",
+        data: null,
+      };
+    }
+    let responseParsed: responseType;
+    try {
+      responseParsed = await response.json();
+    } catch (error) {
+      return {
+        success: false,
+        error: "Failed to parse server response",
+        data: null,
+      };
+    }
+
+    return { success: true, data: responseParsed.data, error: null };
+  } catch (error) {
     return {
       error: "Unable to connect API",
       success: false,
